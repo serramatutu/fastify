@@ -1,13 +1,13 @@
-import WorkerPool from "./WorkerPool";
+import WorkerPool from "./WorkerPool.ts";
 
-export type MapFunction<T, R> = (data: T[]) => R[];
+export type MapFunction<T, R> = (element: T, index?: number, array?: T[]) => R;
 
 interface MapOperation<T, R> {
     type: "map";
     fun: MapFunction<T, R>;
 }
 
-export type FilterFunction<T> = (data: T[]) => T[];
+export type FilterFunction<T> = (element: T, index?: number, array?: T[]) => boolean;
 
 interface FilterOperation<T> {
     type: "filter";
@@ -21,7 +21,7 @@ function _cast<T, NT>(instance: Fastify<T>): Fastify<NT> {
 }
 
 export class Fastify<T> {
-    private _ops: Operation<unknown, unknown>[];
+    private _ops: Operation<any, any>[];
     private _data: T[];
     private _pending = true;
 
@@ -59,9 +59,9 @@ export class Fastify<T> {
         let data: unknown[] = this._data;
         for (const op of this._ops) {
             if (op.type === "map") {
-                data = op.fun(data);
+                data = data.map(op.fun);
             } else if (op.type === "filter") {
-                data = op.fun(data);
+                data = data.filter(op.fun);
             }
         }
 
