@@ -1,5 +1,3 @@
-
-
 class WorkerPool {
     public readonly workers = 4;
 
