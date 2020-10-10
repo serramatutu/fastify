@@ -17,3 +17,8 @@ More may be added later
 
 - [ ] Document implemented functions with examples
 - [ ] Improve README.md
+
+# Publishing
+- [ ] [nest.land](https://nest.land) mirror publishing
+- [ ] CI for tests
+- [ ] CI for publishing
