@@ -1,60 +1,59 @@
-interface Operation {
+import WorkerPool from './WorkerPool';
+
+export type MapFunction<T, R> = (data: T[]) => R[];
+
+interface MapOperation<T, R> {
     type: "map";
+    fun: MapFunction<T, R>;
 }
 
-export type WorkerFunction<T, R> = (data: T) => R;
+export type FilterFunction<T> = (data: T[]) => T[];
 
-export class Fastify {
+interface FilterOperation<T> {
+    type: "filter",
+    fun: FilterFunction<T>
+}
+
+type Operation<T, R> = 
+    MapOperation<T, R> | 
+    FilterOperation<T>;
+
+function _cast<T, NT>(instance: Fastify<T>): Fastify<NT> {
+    return instance as unknown as Fastify<NT>;
+}
+
+export class Fastify<T> {
     public readonly workers: number = 4;
-    public readonly mode: "spawn" | "persist";
 
-    private _terminated = false;
-    private _workers: Worker[];
+    private _ops: Operation<unknown, unknown>[];
 
-    private _ops: Operation[];
-    private _data: unknown[];
+    private _data: T[];
 
-    constructor(options?: Partial<Fastify>) { 
+    constructor(data: T[], options?: Partial<Fastify<T>>) { 
         Object.assign(this, options)
-
-        if (this.mode === "persist") {
-            this._initWorkers();    
-        }
-    }
-
-    private _initWorkers() {
-
-    }// 
-    
-    terminate(): Fastify {
-        if (this.mode === "spawn") {
-            throw new Error("Cannot terminate Executor set to 'spawn' mode.");
-        }
-
-        if (this._terminated) {
-            throw new Error("Cannot terminate Executor twice.");
-        }
-
-        // TODO: kill all workers
-        return this;
-    }
-
-    data<T>(data: T[]): Fastify {
-        if (this._ops.length > 0) {
-            throw new Error("Cannot set data on Executor with pending operations.");
-        }
-
         this._data = data;
+    }
+
+    map<R>(fun: MapFunction<T, R>): Fastify<R> {
+        this._ops.push({
+            type: "map",
+            fun: fun
+        });
+
+        return _cast<T, R>(this);
+    }
+
+    filter(fun: FilterFunction<T>): Fastify<T> {
+        this._ops.push({
+            type: "filter",
+            fun: fun
+        });
+
         return this;
     }
 
-    map<T, R>(fun: WorkerFunction<T[], R>, data: T[]): R {
-        return fun(data);
-    }
-
-    // TODO: typing
-    run() {
-        
+    run(workerPool?: WorkerPool): T[] {
+        return this._data;
     }
 }
 
