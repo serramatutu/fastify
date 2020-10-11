@@ -16,3 +16,11 @@ Deno.test("WorkerPool.start() on started instance raises error", () => {
     });
     wp.stop();
 });
+
+Deno.test("asd", async () => {
+    const wp = new WorkerPool();
+    wp.start();
+    const result = await wp.run((a, b) => a + b, [1, 2]);
+    console.log("RESULT", result);
+    wp.stop();
+});

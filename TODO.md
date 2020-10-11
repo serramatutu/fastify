@@ -1,5 +1,8 @@
 # TODO
 
+# General
+- [ ] Write code in string so that no `--allow-read` is required. Deno needs to support `URL.createObjectURL` for this to work.
+
 # API
 
 - [ ] Executor class

@@ -1,3 +1,9 @@
+interface WorkerMessageData<F extends (...args: any[]) => any> {
+    requestId: number;
+    args: Parameters<F>;
+    code: string;
+}
+
 class WorkerPool {
     public readonly workers = 4;
     public readonly allowDeno = false;
@@ -16,7 +22,7 @@ class WorkerPool {
     }
 
     private _initializeWorker(): Worker {
-        const worker = new Worker(new URL("./_worker.ts", import.meta.url).href, {
+        const worker = new Worker(new URL("./_worker.js", import.meta.url).href, {
             type: "module",
             deno: this.allowDeno,
         });
@@ -51,15 +57,43 @@ class WorkerPool {
         this._running = false;
     }
 
-    run<F extends (...args: any[]) => any>(
+    private _getFunctionSource(fun: (...args: any[]) => any): string {
+        let source = fun.toString();
+        if (source.indexOf("[native code]") >= 0) {
+            source = function nativeWrapper() {
+                fun();
+            }.toString();
+        }
+
+        return source;
+    }
+
+    async run<F extends (...args: any[]) => any>(
         fun: F,
         args: Parameters<F>
-    ): ReturnType<F> {
+    ): Promise<ReturnType<F>> {
         if (!this._running) {
             throw new Error("Cannot run function on stopped WorkerPool.");
         }
 
-        return fun(...args);
+        // TODO: for now, only use worker 0
+
+        const worker = this._workers[0];
+        const message: WorkerMessageData<F> = {
+            requestId: 0, // TODO: for now
+            args: args,
+            code: this._getFunctionSource(fun),
+        };
+
+        return new Promise((resolve, reject) => {
+            worker.postMessage(message);
+            worker.onmessage = (e: MessageEvent<ReturnType<F>>) => {
+                resolve(e.data.result);
+            };
+            worker.onerror = (e: ErrorEvent) => {
+                reject(e.error);
+            };
+        });
     }
 }
 
