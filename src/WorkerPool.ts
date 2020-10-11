@@ -60,9 +60,9 @@ class WorkerPool {
     private _getFunctionSource(fun: (...args: any[]) => any): string {
         let source = fun.toString();
         if (source.indexOf("[native code]") >= 0) {
-            source = function nativeWrapper() {
-                fun();
-            }.toString();
+            throw new Error(
+                "Native functions are not allowed to be invoked directly. If you wish to use one, make sure to wrap it with a user-defined function"
+            );
         }
 
         return source;
@@ -88,10 +88,12 @@ class WorkerPool {
         return new Promise((resolve, reject) => {
             worker.postMessage(message);
             worker.onmessage = (e: MessageEvent<ReturnType<F>>) => {
+                console.log("RESOLVE");
                 resolve(e.data.result);
             };
             worker.onerror = (e: ErrorEvent) => {
-                reject(e.error);
+                console.log("REJECT");
+                reject(e.message);
             };
         });
     }
