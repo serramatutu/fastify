@@ -11,7 +11,7 @@ class WorkerPool {
     private _running = false;
 
     private _workers: Worker[] = [];
-    private _availableWorkers: Set<number> = new Set();
+    private _availableWorkers: number[] = [];
 
     constructor(options?: Partial<WorkerPool>) {
         Object.assign(this, options);
@@ -37,7 +37,7 @@ class WorkerPool {
 
         for (let i = 0; i < this.workers; i++) {
             this._workers.push(this._initializeWorker());
-            this._availableWorkers.add(i);
+            this._availableWorkers.push(i);
         }
 
         this._running = true;
@@ -53,7 +53,7 @@ class WorkerPool {
         }
 
         this._workers = [];
-        this._availableWorkers = new Set();
+        this._availableWorkers = [];
         this._running = false;
     }
 
@@ -61,7 +61,7 @@ class WorkerPool {
         let source = fun.toString();
         if (source.indexOf("[native code]") >= 0) {
             throw new Error(
-                "Native functions are not allowed to be invoked directly. If you wish to use one, make sure to wrap it with a user-defined function"
+                "Native functions are not allowed to be invoked directly. If you wish to use one, make sure to wrap it with a user-defined function."
             );
         }
 
@@ -76,16 +76,19 @@ class WorkerPool {
             throw new Error("Cannot run function on stopped WorkerPool.");
         }
 
-        // TODO: for now, only use worker 0
+        const workerIndex = this._availableWorkers.shift();
+        if (!workerIndex) {
+            throw new Error("WorkerPool exhausted.");
+        }
 
-        const worker = this._workers[0];
+        const worker = this._workers[workerIndex];
         const message: WorkerMessageData<F> = {
             requestId: 0, // TODO: for now
             args: args,
             code: this._getFunctionSource(fun),
         };
 
-        return new Promise((resolve, reject) => {
+        const promise: Promise<ReturnType<F>> = new Promise((resolve, reject) => {
             worker.postMessage(message);
             worker.onmessage = (e: MessageEvent<ReturnType<F>>) => {
                 console.log("RESOLVE");
@@ -96,6 +99,12 @@ class WorkerPool {
                 reject(e.message);
             };
         });
+        promise.finally(() => {
+            console.log("PUSHED INDEX");
+            this._availableWorkers.push(workerIndex);
+        });
+
+        return promise;
     }
 }
 

@@ -1,31 +1,37 @@
 import { assertEquals } from "https://deno.land/std@0.74.0/testing/asserts.ts";
-import Fastify from "../src/Fastify.ts";
+import { FastifyValue, FastifyArray } from "../src/Fastify.ts";
 
-Deno.test("Fastify.run() with no operations returns same data", () => {
+Deno.test("FastifyValue.get() with no operations returns same data", async () => {
+    const data = 1;
+    const processed = await FastifyValue.init(data).get();
+    assertEquals(processed, data);
+});
+
+Deno.test("FastifyArray.get() with no operations returns same data", async () => {
     const data = [1, 2, 3, 4, 5];
-    const processed = new Fastify(data).run();
+    const processed = await FastifyArray.init(data).get();
     assertEquals(data, processed);
 });
 
-Deno.test("Fastify.map().run() should return expected result", () => {
+Deno.test("FastifyArray.map().get() should return expected result", async () => {
     const data = [1, 2, 3, 4, 5];
     const addOne = (x: number) => x + 1;
-    const fMap = new Fastify(data).map(addOne).run();
+    const fMap = await FastifyArray.init(data).map(addOne).get();
     const normalMap = data.map(addOne);
 
     assertEquals(fMap, normalMap);
 });
 
-Deno.test("Fastify.filter().run() should return expected result", () => {
+Deno.test("FastifyArray.filter().get() should return expected result", async () => {
     const data = [1, 2, 3, 4, 5];
     const isEven = (x: number) => x % 2 == 0;
-    const fFilter = new Fastify(data).filter(isEven).run();
+    const fFilter = await FastifyArray.init(data).filter(isEven).get();
     const normalFilter = data.filter(isEven);
 
     assertEquals(fFilter, normalFilter);
 });
 
-Deno.test("Fastify operations should execute in expected order", () => {
+Deno.test("FastifyArray operations should execute in expected order", async () => {
     const data = [1, 2, 3, 4, 5];
     const stringify = (x: number) => x.toString();
     const shazam = (x: number | string) => {
@@ -33,6 +39,9 @@ Deno.test("Fastify operations should execute in expected order", () => {
         return x + "a";
     };
 
-    const stringifyAndShazam = new Fastify(data).map(stringify).map(shazam).run();
+    const stringifyAndShazam = await FastifyArray.init(data)
+        .map(stringify)
+        .map(shazam)
+        .get();
     assertEquals(stringifyAndShazam, ["1a", "2a", "3a", "4a", "5a"]);
 });

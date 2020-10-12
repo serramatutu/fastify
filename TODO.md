@@ -7,6 +7,7 @@
 
 - [ ] Executor class
 - [ ] Global `fastify` object
+- [ ] `use` method for injecting required functions into workers.
 
 # Functions
 
