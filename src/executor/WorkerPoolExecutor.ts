@@ -1,10 +1,23 @@
 import Executor from "./Executor.ts";
 
+type SerializedValue<T> = T extends (...args: any[]) => any ? string : T;
+
+type Serialized<T> = T extends Array<infer P>
+    ? SerializedValue<P>[]
+    : SerializedValue<T>;
+// T extends { [key: string]: infer P} ?
+//     { [key: string]: SerializedValue<P>}
+//     : SerializedValue<T>;
+
 interface WorkerMessageData<F extends (...args: any[]) => any> {
     requestId: number;
-    args: Parameters<F>;
+    serializedArgs: Serialized<Parameters<F>>;
+    functionArgIndexes: number[];
     code: string;
 }
+
+let f = (a: number) => 1;
+let a: Serialized<typeof f>;
 
 export class WorkerPoolExecutor implements Executor {
     public readonly workers = 4;
@@ -35,8 +48,10 @@ export class WorkerPoolExecutor implements Executor {
         return this.workers;
     }
 
-    private _initializeWorker(): Worker {
+    private _initializeWorker(index: number): Worker {
+        const name = `FastifyWorker_${index}`;
         const worker = new Worker(new URL("./_worker.js", import.meta.url).href, {
+            name: name,
             type: "module",
             deno: this.allowDeno,
         });
@@ -50,7 +65,7 @@ export class WorkerPoolExecutor implements Executor {
         }
 
         for (let i = 0; i < this.workers; i++) {
-            this._workers.push(this._initializeWorker());
+            this._workers.push(this._initializeWorker(i));
             this._idleWorkers.push(i);
         }
 
@@ -82,6 +97,34 @@ export class WorkerPoolExecutor implements Executor {
         return source;
     }
 
+    private _serializeArg<T>(arg: T): SerializedValue<T> {
+        if (typeof arg === "function") {
+            let funcArg = (arg as unknown) as (...args: any[]) => any;
+            return this._getFunctionSource(funcArg) as SerializedValue<T>;
+        }
+
+        return arg as SerializedValue<T>;
+    }
+
+    // TODO: maybe recursive? maybe type this better -> Parameters<F> = T
+    private _getSerializedArgs<F extends (...args: any[]) => any>(
+        args: Parameters<F>
+    ): [Serialized<Parameters<F>>, number[]] {
+        const indexes: number[] = [];
+        const serialized = args.map((arg, index) => {
+            // TODO: careful with stuff like Object.create(Function)
+            if (typeof arg === "function") {
+                indexes.push(index);
+                let funcArg = (arg as unknown) as (...args: any[]) => any;
+                return this._getFunctionSource(funcArg);
+            }
+
+            return arg;
+        });
+
+        return [serialized as Serialized<Parameters<F>>, indexes];
+    }
+
     async run<F extends (...args: any[]) => any>(
         fun: F,
         args: Parameters<F>
@@ -97,9 +140,14 @@ export class WorkerPoolExecutor implements Executor {
         }
 
         const worker = this._workers[workerIndex];
+
+        const [serializedArgs, functionArgIndexes] = this._getSerializedArgs<F>(
+            args
+        );
         const message: WorkerMessageData<F> = {
             requestId: 0, // TODO: for now
-            args: args,
+            serializedArgs: serializedArgs,
+            functionArgIndexes: functionArgIndexes,
             code: this._getFunctionSource(fun),
         };
 
