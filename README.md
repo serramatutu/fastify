@@ -1,5 +1,4 @@
-![master](https://github.com/serramatutu/fastify/workflows/CI/badge.svg)
-
+![master](https://github.com/serramatutu/fastify/workflows/CI/badge.svg?branch=master)
 
 # fastify
 
@@ -12,6 +11,13 @@ As this is currently a personal project in its very early stages, I'm working on
 For now, we're using [Prettier](https://prettier.io/) as our code formatter as `deno fmt` currently does not support much customization. You should have it installed globally.
 
 Also, we're using [GNU Make](https://www.gnu.org/software/make/) to facilitate running scripts.
+
+# coverage
+
+| Branch | Coverage |
+| ------ | -------- |
+| master | ![master](https://github.com/serramatutu/fastify/workflows/CI/badge.svg?branch=master) |
+| dev | ![dev](https://github.com/serramatutu/fastify/workflows/CI/badge.svg?branch=dev) |
 
 ## git hooks
 
