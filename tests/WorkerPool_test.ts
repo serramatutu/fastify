@@ -3,7 +3,7 @@ import {
     assertThrows,
     assertThrowsAsync,
 } from "https://deno.land/std@0.74.0/testing/asserts.ts";
-import WorkerPool from "../src/WorkerPool.ts";
+import WorkerPool from "../src/executor/WorkerPool.ts";
 
 Deno.test("WorkerPool.stop() on stopped instance raises error", () => {
     const wp = new WorkerPool();

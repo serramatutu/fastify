@@ -1,10 +1,12 @@
+import Executor from "./Executor.ts";
+
 interface WorkerMessageData<F extends (...args: any[]) => any> {
     requestId: number;
     args: Parameters<F>;
     code: string;
 }
 
-class WorkerPool {
+export class WorkerPool implements Executor {
     public readonly workers = 4;
     public readonly allowDeno = false;
 
@@ -27,6 +29,10 @@ class WorkerPool {
 
     get activeWorkers() {
         return this.workers - this.idleWorkers;
+    }
+
+    get parallelizationCapacity() {
+        return this.workers;
     }
 
     private _initializeWorker(): Worker {
