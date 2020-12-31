@@ -6,7 +6,7 @@ interface WorkerMessageData<F extends (...args: any[]) => any> {
     code: string;
 }
 
-export class WorkerPool implements Executor {
+export class WorkerPoolExecutor implements Executor {
     public readonly workers = 4;
     public readonly allowDeno = false;
 
@@ -15,7 +15,7 @@ export class WorkerPool implements Executor {
     private _workers: Worker[] = [];
     private _idleWorkers: number[] = [];
 
-    constructor(options?: Partial<WorkerPool>) {
+    constructor(options?: Partial<WorkerPoolExecutor>) {
         Object.assign(this, options);
     }
 
@@ -46,7 +46,7 @@ export class WorkerPool implements Executor {
 
     start() {
         if (this._running) {
-            throw new Error("WorkerPool is already running.");
+            throw new Error("WorkerPoolExecutor is already running.");
         }
 
         for (let i = 0; i < this.workers; i++) {
@@ -59,7 +59,7 @@ export class WorkerPool implements Executor {
 
     stop() {
         if (!this._running) {
-            throw new Error("WorkerPool is already stopped.");
+            throw new Error("WorkerPoolExecutor is already stopped.");
         }
 
         for (const worker of this._workers) {
@@ -87,13 +87,13 @@ export class WorkerPool implements Executor {
         args: Parameters<F>
     ): Promise<ReturnType<F>> {
         if (!this._running) {
-            throw new Error("Cannot run function on stopped WorkerPool.");
+            throw new Error("Cannot run function on stopped WorkerPoolExecutor.");
         }
 
         const workerIndex = this._idleWorkers.shift();
         // TODO: maybe add job queue? for now throws
         if (typeof workerIndex !== "number") {
-            throw new Error("WorkerPool exhausted.");
+            throw new Error("WorkerPoolExecutor exhausted.");
         }
 
         const worker = this._workers[workerIndex];
@@ -120,4 +120,4 @@ export class WorkerPool implements Executor {
     }
 }
 
-export default WorkerPool;
+export default WorkerPoolExecutor;
