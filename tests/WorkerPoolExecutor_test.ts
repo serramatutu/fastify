@@ -21,14 +21,6 @@ Deno.test("WorkerPoolExecutor.start() on started instance raises error", () => {
     wp.stop();
 });
 
-Deno.test("WorkerPoolExecutor.run() returns expected result", async () => {
-    const wp = new WorkerPoolExecutor();
-    wp.start();
-    const result = await wp.run((a, b) => a + b, [1, 2]);
-    assertEquals(result, 3);
-    wp.stop();
-});
-
 Deno.test(
     "WorkerPoolExecutor.run() raises error when invoked with native function",
     async () => {
