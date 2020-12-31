@@ -17,7 +17,7 @@ function deserializeArgs(serializedArgs, functionArgIndexes) {
     return deserializedArgs;
 }
 
-self.onmessage = async (e) =>{ 
+self.onmessage = async (e) =>{
     let fun = deserializeFunction(e.data.code);
     let args = deserializeArgs(e.data.serializedArgs, e.data.functionArgIndexes);
     const message = {
