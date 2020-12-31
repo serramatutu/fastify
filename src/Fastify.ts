@@ -78,7 +78,6 @@ class FastifyArray<T> extends FastifyBase<T[], FastifyChunkableOperation<T[]>> {
                 return new Promise<R[]>((resolve, reject) => {
                     dataPromise
                         .then(async (data: T[]) => {
-                            // TODO: use executor
                             const map = (d: T[], fun: MapFunction<T, R>) =>
                                 d.map(fun);
                             const mapped = await executor.run(map, [data, fun]);
@@ -100,7 +99,6 @@ class FastifyArray<T> extends FastifyBase<T[], FastifyChunkableOperation<T[]>> {
                 return new Promise<T[]>((resolve, reject) => {
                     dataPromise
                         .then(async (data: T[]) => {
-                            // TODO: use executor
                             const filter = (d: T[], fun: FilterFunction<T>) =>
                                 d.filter(fun);
                             const filtered = await executor.run(filter, [data, fun]);
