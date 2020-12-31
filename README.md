@@ -1,3 +1,6 @@
+![master](https://github.com/serramatutu/fastify/workflows/CI/badge.svg)
+
+
 # fastify
 
 fastify's goal is to be a dependencyless, intuitive [Worker](https://github.com/denoland/deno/blob/44251ce8eaa0def807b9867f73ee23adfb539487/docs/runtime/workers.md)-based parallelization library for [Deno](https://deno.land).
