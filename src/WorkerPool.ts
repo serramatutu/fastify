@@ -11,7 +11,7 @@ class WorkerPool {
     private _running = false;
 
     private _workers: Worker[] = [];
-    private _availableWorkers: number[] = [];
+    private _idleWorkers: number[] = [];
 
     constructor(options?: Partial<WorkerPool>) {
         Object.assign(this, options);
@@ -19,6 +19,14 @@ class WorkerPool {
 
     get running() {
         return this._running;
+    }
+
+    get idleWorkers() {
+        return this._idleWorkers.length;
+    }
+
+    get activeWorkers() {
+        return this.workers - this.idleWorkers;
     }
 
     private _initializeWorker(): Worker {
@@ -37,7 +45,7 @@ class WorkerPool {
 
         for (let i = 0; i < this.workers; i++) {
             this._workers.push(this._initializeWorker());
-            this._availableWorkers.push(i);
+            this._idleWorkers.push(i);
         }
 
         this._running = true;
@@ -53,7 +61,7 @@ class WorkerPool {
         }
 
         this._workers = [];
-        this._availableWorkers = [];
+        this._idleWorkers = [];
         this._running = false;
     }
 
@@ -76,8 +84,9 @@ class WorkerPool {
             throw new Error("Cannot run function on stopped WorkerPool.");
         }
 
-        const workerIndex = this._availableWorkers.shift();
-        if (!workerIndex) {
+        const workerIndex = this._idleWorkers.shift();
+        // TODO: maybe add job queue? for now throws
+        if (typeof workerIndex !== "number") {
             throw new Error("WorkerPool exhausted.");
         }
 
@@ -91,17 +100,14 @@ class WorkerPool {
         const promise: Promise<ReturnType<F>> = new Promise((resolve, reject) => {
             worker.postMessage(message);
             worker.onmessage = (e: MessageEvent<ReturnType<F>>) => {
-                console.log("RESOLVE");
                 resolve(e.data.result);
             };
             worker.onerror = (e: ErrorEvent) => {
-                console.log("REJECT");
                 reject(e.message);
             };
         });
         promise.finally(() => {
-            console.log("PUSHED INDEX");
-            this._availableWorkers.push(workerIndex);
+            this._idleWorkers.push(workerIndex);
         });
 
         return promise;
