@@ -1,5 +1,4 @@
-![Fastify CI on master](https://github.com/serramatutu/fastify/workflows/Fastify%20CI/badge.svg)
-![Fastify CI on dev](https://github.com/serramatutu/fastify/workflows/Fastify%20CI/badge.svg?branch=dev)
+![master](https://github.com/serramatutu/fastify/workflows/CI/badge.svg)
 
 
 # fastify
