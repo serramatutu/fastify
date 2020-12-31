@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.74.0/testing/asserts.ts";
-import { FastifyValue, FastifyArray } from "../src/Fastify.ts";
+import { fastify, FastifyValue, FastifyArray } from "../src/Fastify.ts";
 
 Deno.test("FastifyValue.get() with no operations returns same data", async () => {
     const data = 1;
@@ -44,4 +44,14 @@ Deno.test("FastifyArray operations should execute in expected order", async () =
         .map(shazam)
         .get();
     assertEquals(stringifyAndShazam, ["1a", "2a", "3a", "4a", "5a"]);
+});
+
+Deno.test("fastify() with primitive should return FastifyValue", async () => {
+    const instance = fastify(1);
+    assertEquals(instance instanceof FastifyValue, true);
+});
+
+Deno.test("fastify() with array should return FastifyArray", async () => {
+    const instance = fastify([1, 2, 3]);
+    assertEquals(instance instanceof FastifyArray, true);
 });

@@ -138,3 +138,17 @@ class FastifyValue<T> extends FastifyBase<T, FastifyAtomicOperation<T>> {
 }
 
 export { FastifyArray, FastifyValue };
+
+export type Fastify<T> = T extends Array<infer P>
+    ? FastifyArray<P>
+    : FastifyValue<T>;
+
+export function fastify<T>(data: T): Fastify<T> {
+    if (Array.isArray(data)) {
+        return FastifyArray.init((data as unknown) as any[]) as Fastify<T>;
+    }
+
+    return FastifyValue.init(data) as Fastify<T>;
+}
+
+export default fastify;
